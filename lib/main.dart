@@ -4,5 +4,11 @@ import 'features/presentation/maps_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(MaterialApp(home: MapsScreen()));
+  runApp(MaterialApp(
+    theme: ThemeData(
+      useMaterial3: true,
+    ),
+    debugShowCheckedModeBanner: false,
+      home: MapsScreen())
+  );
 }

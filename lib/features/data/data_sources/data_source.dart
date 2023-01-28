@@ -8,9 +8,9 @@ class MapsAPI {
   Dio(BaseOptions(baseUrl: 'https://maps.googleapis.com/maps/api/'));
 
   static Future<MapsModel?> fetchNearPlaces(
-      double latitude, double longitude) async {
+      double latitude, double longitude,String query) async {
     Response result =
-    await dio.get('place/nearbysearch/json?keyword=doctor&location='
+    await dio.get('place/nearbysearch/json?keyword=$query&location='
         '$latitude'
         '%2C$longitude&radius=1500&type=restaurant|gas_station&key=$apiKey');
     if (result.statusCode == 200) {

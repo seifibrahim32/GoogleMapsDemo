@@ -9,16 +9,19 @@ import 'features/presentation/maps_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   LocationPermission permission = await Geolocator.checkPermission();
-  if(permission == LocationPermission.denied ||
-      permission == LocationPermission.unableToDetermine){
+  if (permission == LocationPermission.denied ||
+      permission == LocationPermission.unableToDetermine) {
     await Geolocator.requestPermission();
   }
   Bloc.observer = EventObserver();
   runApp(MaterialApp(
-    theme: ThemeData(
-      useMaterial3: true,
-    ),
-    debugShowCheckedModeBanner: false,
+      routes: {
+        'details-screen': (context) => const DetailsScreen()
+      },
+      theme: ThemeData(
+        useMaterial3: true,
+      ),
+      debugShowCheckedModeBanner: false,
       home: MapsScreen())
   );
 }

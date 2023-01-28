@@ -1,113 +1,173 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import 'bloc/bloc.dart';
+import 'bloc/bloc_states.dart';
+
 class MapsScreen extends StatefulWidget {
-  MapsScreen({Key? key}) : super(key: key);
+  const MapsScreen({Key? key}) : super(key: key);
+
   @override
   State<MapsScreen> createState() => _MapsScreenState();
 }
 
 class _MapsScreenState extends State<MapsScreen> {
 
-  static const CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(37.42796133580664, -122.085749655962),
-    zoom: 14.4746,
-  );
-  static const CameraPosition _kLake = CameraPosition(
-      bearing: 192.8334901395799,
-      target: LatLng(37.43296265331129, -122.08832357078792),
-      tilt: 59.440717697143555,
-      zoom: 19.151926040649414);
-
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
 
   TextEditingController searchController = TextEditingController();
 
-  TextStyle? productSansStyle = TextStyle(
-      fontFamily: 'Product Sans',
-      fontSize: 20
-  );
+  TextStyle? productSansStyle =
+      const TextStyle(fontFamily: 'Product Sans', fontSize: 20);
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          GoogleMap(
-            mapType: MapType.hybrid,
-            initialCameraPosition: _kGooglePlex,
-            onMapCreated: (GoogleMapController controller) {
-              _controller.complete(controller);
-            },
-          ),
-          Column(
-            children: [
-              SizedBox(height:62),
-              Container(
-                margin: EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                          blurStyle:BlurStyle.outer,
-                          color:Colors.white70,
-                          blurRadius: 3,
-                          offset: Offset(
-                              14,4
+      body: BlocProvider(
+        create: (BuildContext context) => MapsCubit(),
+        child: BlocBuilder<MapsCubit, MapStates>(
+          builder: (context, state) {
+            if (state is MapLoading) {
+              BlocProvider.of<MapsCubit>(context).connectInternet();
+              return const CircularProgressIndicator();
+            }
+            if (state is MapInitialized) {
+              return Stack(
+                children: [
+                  GoogleMap(
+                    mapType: MapType.hybrid,
+                    markers: BlocProvider.of<MapsCubit>(context).markers,
+                    initialCameraPosition: MapsCubit.cameraPosition,
+                    onMapCreated: (GoogleMapController controller) {
+                      _controller.complete(controller);
+                    },
+                  ),
+                  //Search bar
+                  Column(
+                    children: [
+                      const SizedBox(height: 62),
+                      Container(
+                        margin: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: Colors.white,
+                            boxShadow: const [
+                              BoxShadow(
+                                  blurStyle: BlurStyle.outer,
+                                  color: Colors.white70,
+                                  blurRadius: 3,
+                                  offset: Offset(14, 4)),
+                              BoxShadow(
+                                  color: Colors.grey,
+                                  blurRadius: 3,
+                                  offset: Offset(-2, 1)),
+                              BoxShadow(
+                                  color: Colors.grey,
+                                  blurRadius: 3,
+                                  offset: Offset(0, 1)),
+                              BoxShadow(
+                                  color: Colors.grey,
+                                  blurRadius: 3,
+                                  offset: Offset(0, -2))
+                            ]),
+                        child: Row(children: [
+                          Expanded(
+                            child: TextField(
+                              enabled: true,
+                              style: productSansStyle,
+                              maxLines: 1,
+                              onSubmitted: (query) async  {
+                                await showModalBottomSheet(
+                                  context: context,
+                                  enableDrag: true,
+                                  isScrollControlled: true,
+                                  barrierColor: Colors.transparent,
+                                  backgroundColor: Colors.white,
+                                  //elevates modal bottom screen
+                                  elevation: 10,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30.0),
+                                  ),
+                                  builder: (BuildContext context) {
+                                    return SizedBox(
+                                      height: 200,
+                                      child: Center(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: <Widget>[
+                                            SizedBox(
+                                              height: 150,
+                                              child: ListView.separated(
+                                                shrinkWrap: true,
+                                                primary: true,
+                                                physics:
+                                                    const AlwaysScrollableScrollPhysics(),
+                                                scrollDirection:
+                                                    Axis.horizontal,
+                                                itemBuilder:
+                                                    (BuildContext context,
+                                                        int index) {
+                                                  return Container(
+                                                    width: 151,
+                                                    margin: const EdgeInsets
+                                                            .symmetric(
+                                                        horizontal: 10),
+                                                    decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius.all(
+                                                                Radius.circular(
+                                                                    20)),
+                                                        color: Colors.black),
+                                                  );
+                                                },
+                                                separatorBuilder:
+                                                    (BuildContext context,
+                                                        int index) {
+                                                  return SizedBox(width: 10);
+                                                },
+                                                itemCount: 13,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                              controller: searchController,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintStyle: productSansStyle,
+                                prefixIcon: Icon(Icons.map),
+                                enabledBorder: InputBorder.none,
+                                contentPadding:
+                                    EdgeInsets.only(top: 10, right: 20),
+                                hintText: 'Search for places...',
+                                fillColor: Colors.black,
+                              ),
+                            ),
                           )
+                        ]),
                       ),
-                      BoxShadow(
-                          color:Colors.grey,
-                          blurRadius: 3,
-                          offset: Offset(
-                              -2,1
-                          )
-                      ),
-                      BoxShadow(
-                          color:Colors.grey,
-                          blurRadius: 3,
-                          offset: Offset(
-                              0,1
-                          )
-                      ),
-                      BoxShadow(
-                          color:Colors.grey,
-                          blurRadius: 3,
-                          offset: Offset(
-                              0,-2
-                          )
-                      )
-                    ]
-                ),
-                child: Row(children: [
-                  Expanded(
-                    child: TextField(
-                      enabled: true,
-                      style: productSansStyle,
-                      maxLines: 1,
-                      onSubmitted: (text) {},
-                      controller: searchController,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        hintStyle:  productSansStyle,
-                        prefixIcon: Icon(Icons.map),
-                        enabledBorder: InputBorder.none,
-                        contentPadding: EdgeInsets.only(top:10,right:20),
-                        hintText: 'Search for places...',
-                        fillColor: Colors.black,
-                      ),
-                    ),
-                  )
-                ]),
-              ),
-            ],
-          ),
-        ],
+                    ],
+                  ),
+                ],
+              );
+            }
+            return Container();
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _goToTheLake,
@@ -119,6 +179,7 @@ class _MapsScreenState extends State<MapsScreen> {
 
   Future<void> _goToTheLake() async {
     final GoogleMapController controller = await _controller.future;
-    controller.animateCamera(CameraUpdate.newCameraPosition(_kLake));
+    controller.animateCamera(CameraUpdate.newCameraPosition(MapsCubit.cameraPosition));
   }
+
 }

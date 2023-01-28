@@ -14,7 +14,7 @@ class MapsAPI {
         '$latitude'
         '%2C$longitude&radius=1500&type=restaurant|gas_station&key=$apiKey');
     if (result.statusCode == 200) {
-      print(MapsModel.fromJson(result.data).toJson());
+      print(MapsModel.fromJson(result.data) );
       return MapsModel.fromJson(result.data);
     }
     return null;

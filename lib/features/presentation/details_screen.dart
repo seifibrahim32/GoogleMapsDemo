@@ -8,7 +8,6 @@ class DetailsScreen extends StatefulWidget {
 }
 
 class _DetailsScreenState extends State<DetailsScreen> {
-
   TextStyle? getProductSans({double fontSize = 26}) {
     return TextStyle(fontFamily: 'Product Sans', fontSize: fontSize);
   }
@@ -17,7 +16,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
     return Container(
         width: MediaQuery.of(context).size.width,
         height: 2,
-        color: Colors.grey);
+        color: Colors.grey
+    );
   }
 
   @override
@@ -108,7 +108,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
                           ],
                         ),
                       ),
-
                     ])),
           ],
         ));

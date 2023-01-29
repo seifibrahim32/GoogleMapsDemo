@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 import '../models/maps_model.dart';
 
 class MapsAPI {
-  static String apiKey = 'AIzaSyCcZTaPgenENaD8W9rGxXVFCmBWTyhHZiU';
+  static String apiKey = 'AIzaSyAiLo2-Ngxz-KjtvIGb7eHy7xmc4BgVjys';
   static Dio dio = Dio(
       BaseOptions(
           baseUrl: 'https://maps.googleapis.com/maps/api/'

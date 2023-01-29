@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../data/models/maps_model.dart';
-import '../data/repositories/maps_repository_impl.dart';
 import 'bloc/bloc.dart';
 import 'bloc/bloc_states.dart';
 
@@ -24,7 +23,7 @@ class _MapsScreenState extends State<MapsScreen> {
 
   TextStyle? productSansStyle =
       const TextStyle(fontFamily: 'Product Sans', fontSize: 20);
-
+  String? query = '';
   @override
   void initState() {
     super.initState();
@@ -34,13 +33,16 @@ class _MapsScreenState extends State<MapsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocProvider(
+        lazy: false,
         create: (BuildContext context) => MapsCubit(),
         child: BlocBuilder<MapsCubit, MapStates>(
-          builder: (context, state) {
+          builder: (ctx, state) {
             if (state is MapLoading) {
-              BlocProvider.of<MapsCubit>(context).connectInternet();
+              BlocProvider.of<MapsCubit>(ctx).connectInternet();
               return const CircularProgressIndicator();
-            } else if (state is LocationInitialized){
+            } else if (state is LocationInitialized) {
+              BlocProvider.of<MapsCubit>(ctx).fetchNearPlaces(context,
+                  query:query!);
               return Center(
                   child: Text(
                 'Location Detected',
@@ -48,30 +50,30 @@ class _MapsScreenState extends State<MapsScreen> {
               ));
             } else if (state is MapInitialized || state is MapUpdated) {
               return FutureBuilder<MapsModel?>(
-                future: BlocProvider.of<MapsCubit>(context).fetchNearPlaces(),
-                builder: (context, snapshot) {
+                future:
+                    BlocProvider.of<MapsCubit>(ctx).fetchNearPlaces(context,
+                        query:query!),
+                builder: (ctx, snapshot) {
                   if (snapshot.hasData) {
-                    print('Model ${snapshot.data!.toJson()}');
-                    print('Model ${snapshot.hasData}');
                     if (snapshot.connectionState != ConnectionState.done) {
-                      snapshot.data?.results?.forEach((result) {
-                        createNewMarkers(context, result);
-                      });
                       return const CircularProgressIndicator(
                         color: Colors.black,
                       );
-                    }
-                    else if (snapshot.connectionState ==
+                    } else if (snapshot.connectionState ==
                         ConnectionState.done) {
                       return Stack(
                         children: [
                           GoogleMap(
                             mapType: MapType.hybrid,
-                            markers:
-                                BlocProvider.of<MapsCubit>(context).markers,
+                            markers: BlocProvider.of<MapsCubit>(ctx).markers,
                             initialCameraPosition: MapsCubit.cameraPosition,
                             onMapCreated: (GoogleMapController controller) {
-                              _controller.complete(controller);
+                              if (!_controller.isCompleted) {
+                                _controller.complete(controller);
+                              }
+                              else{
+
+                              }
                             },
                           ),
                           //Search bar
@@ -109,8 +111,9 @@ class _MapsScreenState extends State<MapsScreen> {
                                       style: productSansStyle,
                                       maxLines: 1,
                                       onSubmitted: (query) async {
-                                        BlocProvider.of<MapsCubit>(context)
-                                            .fetchNearPlaces(
+                                        this.query = query;
+                                        BlocProvider.of<MapsCubit>(ctx)
+                                            .fetchNearPlaces(context,
                                                 query: 'keyword=$query&');
                                       },
                                       controller: searchController,
@@ -134,7 +137,7 @@ class _MapsScreenState extends State<MapsScreen> {
                       );
                     }
                   }
-                  return Container(color: Colors.purpleAccent);
+                  return CircularProgressIndicator();
                 },
               );
             }
@@ -156,73 +159,23 @@ class _MapsScreenState extends State<MapsScreen> {
         CameraUpdate.newCameraPosition(MapsCubit.cameraPosition));
   }
 
-  createNewMarkers(BuildContext context, Results result) {
-    BlocProvider.of<MapsCubit>(context).markers.add(Marker(
-        markerId: MarkerId(result.name!),
-        infoWindow: InfoWindow(title: result.name),
-        onTap: () {
-          showBottomSheet(context, result);
-        },
-        icon: BitmapDescriptor.defaultMarker,
-        position: LatLng(
-            result.geometry!.location!.lat!, result.geometry!.location!.lng!)));
-  }
-
-  showBottomSheet(BuildContext context, Results result) async {
-    return await showModalBottomSheet(
-      context: context,
-      enableDrag: true,
-      isScrollControlled: true,
-      barrierColor: Colors.transparent,
-      backgroundColor: Colors.white,
-      //elevates modal bottom screen
-      elevation: 10,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(30.0),
-      ),
-      builder: (BuildContext context) {
-        return SizedBox(
-          height: 200,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(result.name!, style: productSansStyle),
-                Container(height: 4, color: Colors.grey),
-                SizedBox(
-                  height: 150,
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    primary: true,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    scrollDirection: Axis.horizontal,
-                    itemBuilder: (BuildContext context, int index) {
-                      return Container(
-                        width: 151,
-                        margin: const EdgeInsets.symmetric(horizontal: 10),
-                        decoration: const BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(20)),
-                            color: Colors.black),
-                      );
-                    },
-                    separatorBuilder: (BuildContext context, int index) {
-                      return SizedBox(width: 10);
-                    },
-                    itemCount: 13,
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pushNamed('details-screen');
-                  },
-                  child: const Text('Show more...'),
-                )
-              ],
+  Future showError(BuildContext ctx) async {
+    return Dialog(
+      child: Scaffold(
+        body: Container(
+            width:60,
+            height:40,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8)
             ),
-          ),
-        );
-      },
+            child: Column(
+                children: [
+                  Icon(Icons.error_outline,color: Colors.red,),
+                  Text('The query found 0',style: productSansStyle)
+                ]
+            )
+        ),
+      )
     );
   }
 }

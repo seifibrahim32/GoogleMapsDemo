@@ -7,8 +7,9 @@ abstract class MapStates extends Equatable {
 
 class MapLoading extends MapStates {}
 
-class LocationInitialized extends MapStates {}
+class MapInitialized extends MapStates {
+  MapInitialized();
 
-class MapInitialized extends MapStates {}
-
-class MapUpdated extends MapStates {}
+  @override
+  List<Object> get props => [];
+}

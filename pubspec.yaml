@@ -41,9 +41,12 @@ dependencies:
   dio: ^4.0.6
   bloc: ^8.1.0
   flutter_bloc: ^8.1.1
+  json_annotation: any
   connectivity_plus: ^3.0.2
 
 dev_dependencies:
+  json_serializable: any
+  build_runner: any
   flutter_test:
     sdk: flutter
 

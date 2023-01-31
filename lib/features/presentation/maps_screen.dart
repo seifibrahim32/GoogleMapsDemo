@@ -6,7 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../data/models/maps_model.dart';
 import 'bloc/bloc.dart';
-import 'bloc/bloc_states.dart';
+import 'bloc/states/map_states.dart';
 
 class MapsScreen extends StatefulWidget {
   const MapsScreen({Key? key}) : super(key: key);
@@ -24,6 +24,7 @@ class _MapsScreenState extends State<MapsScreen> {
   TextStyle? productSansStyle =
       const TextStyle(fontFamily: 'Product Sans', fontSize: 20);
   String? query = '';
+
   @override
   void initState() {
     super.initState();
@@ -40,104 +41,85 @@ class _MapsScreenState extends State<MapsScreen> {
             if (state is MapLoading) {
               BlocProvider.of<MapsCubit>(ctx).connectInternet();
               return const CircularProgressIndicator();
-            } else if (state is LocationInitialized) {
-              BlocProvider.of<MapsCubit>(ctx).fetchNearPlaces(context,
-                  query:query!);
-              return Center(
-                  child: Text(
-                'Location Detected',
-                style: productSansStyle,
-              ));
-            } else if (state is MapInitialized || state is MapUpdated) {
+            } else if (state is MapInitialized) {
               return FutureBuilder<MapsModel?>(
-                future:
-                    BlocProvider.of<MapsCubit>(ctx).fetchNearPlaces(context,
-                        query:query!),
+                future: BlocProvider.of<MapsCubit>(ctx).fetchNearPlaces(context,
+                    query: query!.isEmpty ? '' : 'keyword=$query&'),
                 builder: (ctx, snapshot) {
+                  print(snapshot.connectionState.name);
                   if (snapshot.hasData) {
-                    if (snapshot.connectionState != ConnectionState.done) {
-                      return const CircularProgressIndicator(
-                        color: Colors.black,
-                      );
-                    } else if (snapshot.connectionState ==
-                        ConnectionState.done) {
-                      return Stack(
-                        children: [
-                          GoogleMap(
-                            mapType: MapType.hybrid,
-                            markers: BlocProvider.of<MapsCubit>(ctx).markers,
-                            initialCameraPosition: MapsCubit.cameraPosition,
-                            onMapCreated: (GoogleMapController controller) {
-                              if (!_controller.isCompleted) {
-                                _controller.complete(controller);
-                              }
-                              else{
-
-                              }
-                            },
-                          ),
-                          //Search bar
-                          Column(
-                            children: [
-                              const SizedBox(height: 62),
-                              Container(
-                                margin: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20),
-                                    color: Colors.white,
-                                    boxShadow: const [
-                                      BoxShadow(
-                                          blurStyle: BlurStyle.outer,
-                                          color: Colors.white70,
-                                          blurRadius: 3,
-                                          offset: Offset(14, 4)),
-                                      BoxShadow(
-                                          color: Colors.grey,
-                                          blurRadius: 3,
-                                          offset: Offset(-2, 1)),
-                                      BoxShadow(
-                                          color: Colors.grey,
-                                          blurRadius: 3,
-                                          offset: Offset(0, 1)),
-                                      BoxShadow(
-                                          color: Colors.grey,
-                                          blurRadius: 3,
-                                          offset: Offset(0, -2))
-                                    ]),
-                                child: Row(children: [
-                                  Expanded(
-                                    child: TextField(
-                                      enabled: true,
-                                      style: productSansStyle,
-                                      maxLines: 1,
-                                      onSubmitted: (query) async {
+                    return Stack(
+                      children: [
+                        GoogleMap(
+                          mapType: MapType.hybrid,
+                          markers: MapsCubit.markers,
+                          initialCameraPosition: MapsCubit.cameraPosition,
+                          onMapCreated: (GoogleMapController controller) {
+                            if (!_controller.isCompleted) {
+                              _controller.complete(controller);
+                            } else {}
+                          },
+                        ),
+                        //Search bar
+                        Column(
+                          children: [
+                            const SizedBox(height: 62),
+                            Container(
+                              margin: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  color: Colors.white,
+                                  boxShadow: const [
+                                    BoxShadow(
+                                        blurStyle: BlurStyle.outer,
+                                        color: Colors.white70,
+                                        blurRadius: 3,
+                                        offset: Offset(14, 4)),
+                                    BoxShadow(
+                                        color: Colors.grey,
+                                        blurRadius: 3,
+                                        offset: Offset(-2, 1)),
+                                    BoxShadow(
+                                        color: Colors.grey,
+                                        blurRadius: 3,
+                                        offset: Offset(0, 1)),
+                                    BoxShadow(
+                                        color: Colors.grey,
+                                        blurRadius: 3,
+                                        offset: Offset(0, -2))
+                                  ]),
+                              child: Row(children: [
+                                Expanded(
+                                  child: TextField(
+                                    enabled: true,
+                                    style: productSansStyle,
+                                    maxLines: 1,
+                                    onSubmitted: (query) {
+                                      setState((){
                                         this.query = query;
-                                        BlocProvider.of<MapsCubit>(ctx)
-                                            .fetchNearPlaces(context,
-                                                query: 'keyword=$query&');
-                                      },
-                                      controller: searchController,
-                                      decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        hintStyle: productSansStyle,
-                                        prefixIcon: const Icon(Icons.map),
-                                        enabledBorder: InputBorder.none,
-                                        contentPadding: const EdgeInsets.only(
-                                            top: 10, right: 20),
-                                        hintText: 'Search for places...',
-                                        fillColor: Colors.black,
-                                      ),
+                                      });
+                                    },
+                                    controller: searchController,
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      hintStyle: productSansStyle,
+                                      prefixIcon: const Icon(Icons.map),
+                                      enabledBorder: InputBorder.none,
+                                      contentPadding: const EdgeInsets.only(
+                                          top: 10, right: 20),
+                                      hintText: 'Search for places...',
+                                      fillColor: Colors.black,
                                     ),
-                                  )
-                                ]),
-                              ),
-                            ],
-                          ),
-                        ],
-                      );
-                    }
+                                  ),
+                                )
+                              ]),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
                   }
-                  return CircularProgressIndicator();
+                  return CircularProgressIndicator(color: Colors.black);
                 },
               );
             }
@@ -161,21 +143,18 @@ class _MapsScreenState extends State<MapsScreen> {
 
   Future showError(BuildContext ctx) async {
     return Dialog(
-      child: Scaffold(
-        body: Container(
-            width:60,
-            height:40,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8)
+        child: Scaffold(
+      body: Container(
+          width: 60,
+          height: 40,
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
+          child: Column(children: [
+            const Icon(
+              Icons.error_outline,
+              color: Colors.red,
             ),
-            child: Column(
-                children: [
-                  Icon(Icons.error_outline,color: Colors.red,),
-                  Text('The query found 0',style: productSansStyle)
-                ]
-            )
-        ),
-      )
-    );
+            Text('The query found 0', style: productSansStyle)
+          ])),
+    ));
   }
 }

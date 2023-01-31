@@ -15,13 +15,10 @@ void main() async {
   }
   Bloc.observer = EventObserver();
   runApp(MaterialApp(
-      routes: {
-        'details-screen': (context) => const DetailsScreen()
-      },
+      routes: {'details-screen': (context) => DetailsScreen()},
       theme: ThemeData(
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      home: MapsScreen())
-  );
+      home: const MapsScreen()));
 }

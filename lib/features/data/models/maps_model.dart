@@ -96,7 +96,7 @@ class Results {
     userRatingsTotal = json['user_ratings_total'];
     vicinity = json['vicinity'];
     openingHours = json['opening_hours'] != null
-        ? new OpeningHours.fromJson(json['opening_hours'])
+        ? OpeningHours.fromJson(json['opening_hours'])
         : null;
     permanentlyClosed = json['permanently_closed'];
   }
@@ -235,10 +235,10 @@ class Photos {
 }
 
 class PlusCode {
-  String? compoundCode;
-  String? globalCode;
+  late String compoundCode;
+  late String globalCode;
 
-  PlusCode({this.compoundCode, this.globalCode});
+  PlusCode({required this.compoundCode,required this.globalCode});
 
   PlusCode.fromJson(Map<String, dynamic> json) {
     compoundCode = json['compound_code'];

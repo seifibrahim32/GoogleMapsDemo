@@ -1,5 +1,3 @@
-# turing_assessment
+# Google Maps Demo
 
-Turing Assessment for Flutter Developer vacancy.
-
-## Getting Started
+Trying Google Maps with Flutter on Android.
